@@ -208,7 +208,8 @@ ColumnLayout {
                         icon: "tag"
                         variant: "ghost"
                         Accessible.name: qsTr("Rename drive")
-                        tooltipText: qsTr("Rename")
+                        ToolTip.visible: renameBtn.containsMouse
+                        ToolTip.text: qsTr("Rename")
                         onClicked: root.openRename(modelData)
                     }
 
@@ -217,7 +218,8 @@ ColumnLayout {
                         icon: "pencil-simple"
                         variant: "ghost"
                         Accessible.name: qsTr("Edit drive")
-                        tooltipText: qsTr("Edit")
+                        ToolTip.visible: editBtn.containsMouse
+                        ToolTip.text: qsTr("Edit")
                         onClicked: root.openNetworkEditorRequested(modelData)
                     }
 
@@ -226,7 +228,8 @@ ColumnLayout {
                         icon: "trash"
                         variant: "ghost"
                         Accessible.name: qsTr("Remove drive")
-                        tooltipText: qsTr("Remove")
+                        ToolTip.visible: removeBtn.containsMouse
+                        ToolTip.text: qsTr("Remove")
                         onClicked: root.removeNetworkDriveRequested(modelData.id, modelData.label)
                     }
                 }
@@ -252,7 +255,8 @@ ColumnLayout {
                 variant: "tonal"
                 enabled: root.discoveryEnabled && !root.scanning
                 Accessible.name: qsTr("Scan network now")
-                tooltipText: qsTr("Re-discover drives")
+                ToolTip.visible: refreshDiscoveryBtn.containsMouse
+                ToolTip.text: qsTr("Re-discover drives")
                 onClicked: if (typeof core !== "undefined" && core) core.refresh_smb_discovery()
 
                 RotationAnimation {
@@ -377,7 +381,8 @@ ColumnLayout {
                         icon: entry.ignored ? "eye" : "eye-slash"
                         variant: "ghost"
                         Accessible.name: entry.ignored ? qsTr("Show drive") : qsTr("Ignore drive")
-                        tooltipText: entry.ignored ? qsTr("Restore") : qsTr("Ignore")
+                        ToolTip.visible: ignoreBtn.containsMouse
+                        ToolTip.text: entry.ignored ? qsTr("Restore") : qsTr("Ignore")
                         onClicked: {
                             if (typeof core !== "undefined" && core) {
                                 if (entry.ignored)
