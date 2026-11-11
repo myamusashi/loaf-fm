@@ -2488,7 +2488,7 @@ impl qobject::LoafCore {
                     .text(app.name.clone())
                     .text(e.to_string())
                     .to_string()),
-            ),
+            );
         }
     }
 
