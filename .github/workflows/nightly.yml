@@ -44,6 +44,7 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
+            mold \
             pkg-config \
             libgl1-mesa-dev \
             libgl1-mesa-dri \
