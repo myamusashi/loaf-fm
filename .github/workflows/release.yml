@@ -42,6 +42,7 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
+            mold \
             pkg-config \
             libgl1-mesa-dev \
             libxkbcommon-dev \
