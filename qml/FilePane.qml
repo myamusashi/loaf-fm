@@ -1942,6 +1942,18 @@ Item {
                                     }
                                 }
                             }
+                        } else {
+                            var count = paneEngine.item_count;
+                            var r1 = Math.max(0, Math.floor((y - listView.originY) / pitch));
+                            var r2 = Math.min(count - 1, Math.floor((y + h - listView.originY) / pitch));
+                            for (var r = r1; r <= r2; ++r) {
+                                var t = listView.originY + r * pitch;
+                                if (x < listView.width && x + w >= 0 && y + h > t && y < t + rowH) {
+                                    var p = String(paneEngine.path_at(r));
+                                    if (p.length > 0)
+                                        sel[p] = true;
+                                }
+                            }
                         }
                         pane.selection = sel;
                     }
@@ -2232,7 +2244,8 @@ Item {
                         onPressed: function(mouse) {
                             // Keep file dragging on the icon/name. Empty space
                             // in a row belongs to the background selection box.
-                            var nameWidth = listNameLoader.item ? Math.min(listNameLoader.width, listNameLoader.item.implicitWidth) : listNameLoader.width;
+                            var nameItem = listNameLoader.item as Item;
+                            var nameWidth = nameItem ? Math.min(listNameLoader.width, nameItem.implicitWidth) : listNameLoader.width;
                             var nameEnd = listNameLoader.mapToItem(rowMouse, nameWidth, 0).x;
                             if (mouse.button === Qt.LeftButton && theme.dragAction === "select"
                                     && pane.renamingPath !== row.path && mouse.x > nameEnd + 8) {

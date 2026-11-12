@@ -6,9 +6,15 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
     let
-      packageBuilder = system:
+      packageBuilder =
+        system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
           qtEnv = pkgs.qt6.env "qt6-env" [
@@ -17,7 +23,9 @@
             pkgs.qt6.qtsvg
             pkgs.qt6.qtwayland
           ];
-        in pkgs.rustPlatform.buildRustPackage {
+        in
+        assert pkgs.lib.versionAtLeast pkgs.qt6.qtbase.version "6.12";
+        pkgs.rustPlatform.buildRustPackage {
           pname = "loaf";
           version = "0.4.0";
           src = ./.;
@@ -49,7 +57,10 @@
           '';
           QT_PLUGIN_PATH = "${qtEnv}/lib/qt-6/plugins";
           QML2_IMPORT_PATH = "${qtEnv}/lib/qt-6/qml";
-          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath [ qtEnv pkgs.libGL ]}";
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath [
+            qtEnv
+            pkgs.libGL
+          ]}";
           XDG_DATA_DIRS = "${pkgs.shared-mime-info}/share";
           postInstall = ''
             install -Dm644 packaging/assets/loaf.desktop $out/share/applications/loaf.desktop
@@ -62,7 +73,8 @@
           '';
         };
     in
-    (flake-utils.lib.eachDefaultSystem (system:
+    (flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         qtEnv = pkgs.qt6.env "qt6-env" [
@@ -71,7 +83,8 @@
           pkgs.qt6.qtsvg
           pkgs.qt6.qtwayland
         ];
-      in {
+      in
+      {
         packages.default = packageBuilder system;
 
         apps.default = {
@@ -79,27 +92,28 @@
           program = "${self.packages.${system}.default}/bin/loaf";
         };
 
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-            cmake
-            ninja
-            mold
-            rustc
-            cargo
-            rustfmt
-            clippy
-            patchelf
-            qt6.qttools
-          ];
+        devShells.default =
+          assert pkgs.lib.versionAtLeast pkgs.qt6.qtbase.version "6.12";
+          pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+              cmake
+              ninja
+              rustc
+              cargo
+              rustfmt
+              clippy
+              patchelf
+              qt6.qttools
+            ];
 
-          buildInputs = [
-            qtEnv
-            pkgs.libGL
-            pkgs.p7zip
-            pkgs.zip
-            pkgs.shared-mime-info
-          ];
+            buildInputs = [
+              qtEnv
+              pkgs.libGL
+              pkgs.p7zip
+              pkgs.zip
+              pkgs.shared-mime-info
+            ];
 
           QMAKE = "${qtEnv}/bin/qmake";
           shellHook = ''

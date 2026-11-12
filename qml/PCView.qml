@@ -614,15 +614,16 @@ Item {
 
                 delegate: ColumnLayout {
                     id: sectionDelegate
+                    required property var modelData
 
                     Layout.fillWidth: true
                     spacing: 12
-                    visible: pcView.sectionExists(modelData)
-                             && (pcView.sectionVisible(modelData) || pcView.customizing)
+                    visible: pcView.sectionExists(sectionDelegate.modelData)
+                             && (pcView.sectionVisible(sectionDelegate.modelData) || pcView.customizing)
 
-                    property string secKey: modelData
-                    property bool secVisible: pcView.sectionVisible(modelData)
-                    property string secView: pcView.sectionView(modelData)
+                    property string secKey: sectionDelegate.modelData
+                    property bool secVisible: pcView.sectionVisible(sectionDelegate.modelData)
+                    property string secView: pcView.sectionView(sectionDelegate.modelData)
                     SectionHeader {
                         Layout.fillWidth: true
                         icon: sectionDelegate.secKey === "places" ? "folder"
@@ -731,6 +732,9 @@ Item {
                                 model: pcView.quickPlaces
 
                                 delegate: Rectangle {
+                                    id: placeGridCard
+                                    required property var modelData
+                                    required property int index
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 116
                                     radius: theme.radiusXl
@@ -751,20 +755,20 @@ Item {
 
                                             LoafShape {
                                                 anchors.fill: parent
-                                                shape: pcView.placeShape(index)
-                                                color: pcView.placeContainer(index)
+                                                shape: pcView.placeShape(placeGridCard.index)
+                                                color: pcView.placeContainer(placeGridCard.index)
                                                 rotation: placeMouse.containsMouse ? 45 : 0
                                                 Behavior on rotation { enabled: theme.animate; SpringAnimation { spring: 2.5; damping: 0.26 } }
                                             }
                                             LoafIcon {
                                                 anchors.centerIn: parent
-                                                name: modelData.icon
+                                                name: placeGridCard.modelData.icon
                                                 size: 24
-                                                color: pcView.placeOnContainer(index)
+                                                color: pcView.placeOnContainer(placeGridCard.index)
                                             }
                                         }
                                         Text {
-                                            text: theme.resolveRustMessage(modelData.name)
+                                            text: theme.resolveRustMessage(placeGridCard.modelData.name)
                                             color: theme.textMain
                                             font.pixelSize: theme.fs(13)
                                             font.bold: true
@@ -781,7 +785,7 @@ Item {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             window.showFiles();
-                                            engine.set_path(modelData.path);
+                                            engine.set_path(placeGridCard.modelData.path);
                                         }
                                     }
                                 }
@@ -798,6 +802,9 @@ Item {
                             model: pcView.quickPlaces
 
                             delegate: Rectangle {
+                                id: placeCarouselCard
+                                required property var modelData
+                                required property int index
                                 width: 156
                                 height: 60
                                 radius: theme.radiusFull
@@ -818,20 +825,20 @@ Item {
 
                                         LoafShape {
                                             anchors.fill: parent
-                                            shape: pcView.placeShape(index)
-                                            color: pcView.placeContainer(index)
+                                            shape: pcView.placeShape(placeCarouselCard.index)
+                                            color: pcView.placeContainer(placeCarouselCard.index)
                                             rotation: cPlaceMouse.containsMouse ? 45 : 0
                                             Behavior on rotation { enabled: theme.animate; SpringAnimation { spring: 2.5; damping: 0.26 } }
                                         }
                                         LoafIcon {
                                             anchors.centerIn: parent
-                                            name: modelData.icon
+                                            name: placeCarouselCard.modelData.icon
                                             size: 18
-                                            color: pcView.placeOnContainer(index)
+                                            color: pcView.placeOnContainer(placeCarouselCard.index)
                                         }
                                     }
                                     Text {
-                                        text: theme.resolveRustMessage(modelData.name)
+                                        text: theme.resolveRustMessage(placeCarouselCard.modelData.name)
                                         color: theme.textMain
                                         font.pixelSize: theme.fs(12)
                                         font.bold: true
@@ -847,7 +854,7 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         window.showFiles();
-                                        engine.set_path(modelData.path);
+                                        engine.set_path(placeCarouselCard.modelData.path);
                                     }
                                 }
                             }
@@ -868,6 +875,8 @@ Item {
                             model: pcView.frequentDirs
 
                             delegate: Rectangle {
+                                id: freqCarouselCard
+                                required property var modelData
                                 width: freqCardRow.implicitWidth + 24
                                 height: 46
                                 radius: theme.radiusFull
@@ -880,8 +889,8 @@ Item {
                                     id: freqCardRow
                                     anchors.centerIn: parent
                                     spacing: 8
-                                    LoafIcon { name: modelData.icon || "folder"; size: 16; color: theme.primary }
-                                    Text { text: theme.resolveRustMessage(modelData.name); color: theme.textMain; font.pixelSize: theme.fs(12); font.bold: true }
+                                    LoafIcon { name: freqCarouselCard.modelData.icon || "folder"; size: 16; color: theme.primary }
+                                    Text { text: theme.resolveRustMessage(freqCarouselCard.modelData.name); color: theme.textMain; font.pixelSize: theme.fs(12); font.bold: true }
                                 }
 
                                 MouseArea {
@@ -891,7 +900,7 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         window.showFiles();
-                                        engine.set_path(modelData.path);
+                                        engine.set_path(freqCarouselCard.modelData.path);
                                     }
                                 }
                             }
@@ -909,6 +918,8 @@ Item {
                                 model: pcView.frequentDirs
 
                                 delegate: Rectangle {
+                                    id: freqGridCard
+                                    required property var modelData
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 46
                                     radius: theme.radiusFull
@@ -920,8 +931,8 @@ Item {
                                     RowLayout {
                                         anchors.centerIn: parent
                                         spacing: 8
-                                        LoafIcon { name: modelData.icon || "folder"; size: 16; color: theme.primary }
-                                        Text { text: theme.resolveRustMessage(modelData.name); color: theme.textMain; font.pixelSize: theme.fs(12); font.bold: true; elide: Text.ElideRight }
+                                        LoafIcon { name: freqGridCard.modelData.icon || "folder"; size: 16; color: theme.primary }
+                                        Text { text: theme.resolveRustMessage(freqGridCard.modelData.name); color: theme.textMain; font.pixelSize: theme.fs(12); font.bold: true; elide: Text.ElideRight }
                                     }
 
                                     MouseArea {
@@ -931,7 +942,7 @@ Item {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             window.showFiles();
-                                            engine.set_path(modelData.path);
+                                            engine.set_path(freqGridCard.modelData.path);
                                         }
                                     }
                                 }
@@ -1082,8 +1093,9 @@ Item {
                             model: pcView.discoveredServers
 
                             delegate: Rectangle {
+                                id: discCard
                                 required property var modelData
-                                readonly property var entry: modelData
+                                readonly property var entry: discCard.modelData
 
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 0
@@ -1119,7 +1131,7 @@ Item {
                                         spacing: 5
 
                                         Text {
-                                            text: entry.name || entry.server || ""
+                                            text: discCard.entry.name || discCard.entry.server || ""
                                             color: theme.textMain
                                             font.pixelSize: theme.fs(13)
                                             font.bold: true
@@ -1128,8 +1140,8 @@ Item {
                                         }
 
                                         Text {
-                                            visible: pcView.serverSubtitle(entry).length > 0
-                                            text: pcView.serverSubtitle(entry)
+                                            visible: pcView.serverSubtitle(discCard.entry).length > 0
+                                            text: pcView.serverSubtitle(discCard.entry)
                                             color: theme.textMuted
                                             font.pixelSize: theme.fs(11)
                                             elide: Text.ElideMiddle
@@ -1139,17 +1151,18 @@ Item {
                                         Flow {
                                             Layout.fillWidth: true
                                             spacing: 6
-                                            visible: (entry.shares || []).length > 0
+                                            visible: (discCard.entry.shares || []).length > 0
 
                                             Repeater {
-                                                model: entry.shares || []
+                                                model: discCard.entry.shares || []
 
                                                 delegate: LoafButton {
+                                                    id: pcDiscShareBtn
                                                     required property string modelData
-                                                    text: modelData
+                                                    text: pcDiscShareBtn.modelData
                                                     icon: "plus"
                                                     variant: "tonal"
-                                                    onClicked: pcView.addDiscoveredShare(entry.server, modelData)
+                                                    onClicked: pcView.addDiscoveredShare(discCard.entry.server, pcDiscShareBtn.modelData)
                                                 }
                                             }
                                         }
@@ -1159,14 +1172,14 @@ Item {
                                         text: qsTr("Add Share…")
                                         icon: "plus"
                                         variant: "outlined"
-                                        onClicked: window.openSmbEditor({ server: entry.server, name: entry.name, share: "" })
+                                        onClicked: window.openSmbEditor({ server: discCard.entry.server, name: discCard.entry.name, share: "" })
                                     }
 
                                     LoafButton {
                                         icon: "eye-slash"
                                         variant: "ghost"
                                         Accessible.name: qsTr("Hide this server")
-                                        onClicked: core.ignore_smb_server(entry.server)
+                                        onClicked: core.ignore_smb_server(discCard.entry.server)
                                     }
                                 }
                             }
@@ -1181,7 +1194,8 @@ Item {
 
         DriveCard {
             id: driveCard
-            drive: modelData
+            required property var modelData
+            drive: driveCard.modelData
 
             onActivated: pcView.openDrive(driveCard.drive)
             onMountRequested: pcView.mountDrive(driveCard.drive)
