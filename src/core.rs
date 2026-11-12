@@ -646,7 +646,7 @@ fn network_place(b: &xdg::Bookmark) -> Option<serde_json::Value> {
     Some(serde_json::json!({
         "id": format!("network:{}", b.uri),
         "kind": "network",
-        "name": Message::raw(&b.display_name()).to_string(),
+        "name": Message::raw(b.display_name()).to_string(),
         "path": b.uri,
         "icon": "network",
         "system_icon": "folder-remote-symbolic",
@@ -698,7 +698,7 @@ fn build_places(hostname: &str, device_type: &str) -> Vec<serde_json::Value> {
         items.push(serde_json::json!({
             "id": format!("bookmark:{}", path.to_string_lossy()),
             "kind": "bookmark",
-            "name": Message::raw(&b.display_name()).to_string(),
+            "name": Message::raw(b.display_name()).to_string(),
             "path": path.to_string_lossy(),
             "icon": "folder-simple",
             "system_icon": "folder-symbolic",
@@ -1609,10 +1609,10 @@ impl qobject::LoafCore {
 
         if identity_changed {
             profile.remember = false;
-            if let Some(old) = previous.as_ref() {
-                if old.remember {
-                    network::clear_password(old);
-                }
+            if let Some(old) = previous.as_ref()
+                && old.remember
+            {
+                network::clear_password(old);
             }
         }
 
@@ -1632,23 +1632,21 @@ impl qobject::LoafCore {
         network::save(&list);
         self.as_mut().refresh_network();
 
-        if reconnect {
-            if let Some(old) = previous {
-                let thread = self.qt_thread();
-                self.spawn_op(
-                    "network",
-                    Message::key(MessageKey::OpSmbDisconnecting)
-                        .text(old.label())
-                        .to_string(),
-                    move |_op| match network::unmount(&old) {
-                        Ok(()) => {
-                            let _ = thread.queue(|mut core| core.as_mut().refresh_network());
-                            Outcome::ok(String::new())
-                        }
-                        Err(e) => Outcome::err(e),
-                    },
-                );
-            }
+        if reconnect && let Some(old) = previous {
+            let thread = self.qt_thread();
+            self.spawn_op(
+                "network",
+                Message::key(MessageKey::OpSmbDisconnecting)
+                    .text(old.label())
+                    .to_string(),
+                move |_op| match network::unmount(&old) {
+                    Ok(()) => {
+                        let _ = thread.queue(|mut core| core.as_mut().refresh_network());
+                        Outcome::ok(String::new())
+                    }
+                    Err(e) => Outcome::err(e),
+                },
+            );
         }
         q(&profile_id)
     }
@@ -1965,7 +1963,7 @@ impl qobject::LoafCore {
         // Never "run" a file by double click; desktop entries and scripts
         // open in their default viewer (text editor), like Nautilus does.
         let launched = match apps::default_for(&mime) {
-            Some(app) => apps::launch(&app, &[path.clone()]).is_ok(),
+            Some(app) => apps::launch(&app, std::slice::from_ref(&path)).is_ok(),
             None => false,
         };
         if !launched {
@@ -2346,7 +2344,7 @@ impl qobject::LoafCore {
     }
 
     pub fn start_dir_size(self: Pin<&mut Self>, key: &QString, paths_json: &QString) {
-        let gen = self.size_generation.fetch_add(1, Ordering::SeqCst) + 1;
+        let generation = self.size_generation.fetch_add(1, Ordering::SeqCst) + 1;
         let gen_ref = self.size_generation.clone();
         let paths = parse_paths(paths_json);
         let key = key.to_string();
@@ -2359,8 +2357,8 @@ impl qobject::LoafCore {
                 }
                 fn advance(&self, _: u64, _: &Path) {}
             }
-            let (bytes, count) = fsops::measure(&paths, &C(gen_ref.clone(), gen));
-            if gen_ref.load(Ordering::Relaxed) != gen {
+            let (bytes, count) = fsops::measure(&paths, &C(gen_ref.clone(), generation));
+            if gen_ref.load(Ordering::Relaxed) != generation {
                 return;
             }
             let items = count.saturating_sub(paths.len() as u64);
@@ -3028,7 +3026,7 @@ impl qobject::LoafCore {
                     return q(&Message::key(MessageKey::OutcomeItemFailed)
                         .text(r.name.clone())
                         .text(e)
-                        .to_string())
+                        .to_string());
                 }
             };
             let to = from.parent().unwrap_or(Path::new("/")).join(name);
@@ -3155,22 +3153,18 @@ impl qobject::LoafCore {
         if paths.is_empty() {
             return;
         }
-        let compress_folders = match self
-            .get_setting(&q("shareCompressFolders"))
-            .to_string()
-            .as_str()
-        {
-            "false" => false,
-            _ => true,
-        };
-        let compress_files = match self
-            .get_setting(&q("shareCompressFiles"))
-            .to_string()
-            .as_str()
-        {
-            "true" => true,
-            _ => false,
-        };
+        let compress_folders = !matches!(
+            self.get_setting(&q("shareCompressFolders"))
+                .to_string()
+                .as_str(),
+            "false"
+        );
+        let compress_files = matches!(
+            self.get_setting(&q("shareCompressFiles"))
+                .to_string()
+                .as_str(),
+            "true"
+        );
         let format = match self
             .get_setting(&q("shareCompressFormat"))
             .to_string()
@@ -3519,11 +3513,7 @@ impl Partial {
 }
 
 fn some_if<T>(v: Vec<T>, wrap: impl FnOnce(Vec<T>) -> UndoAction) -> Option<UndoAction> {
-    if v.is_empty() {
-        None
-    } else {
-        Some(wrap(v))
-    }
+    if v.is_empty() { None } else { Some(wrap(v)) }
 }
 
 /// Reverses an action.
@@ -3540,34 +3530,34 @@ fn invert(action: &UndoAction, op: &Op) -> Partial {
         UndoAction::Create(paths) => {
             // Never destroy data on undo: created items go to the trash.
             for (i, p) in paths.iter().enumerate() {
-                if std::fs::symlink_metadata(p).is_ok() {
-                    if let Err(e) = trash::trash(p) {
-                        return Partial::stopped(
-                            some_if(paths[..i].to_vec(), UndoAction::Create),
-                            some_if(paths[i..].to_vec(), UndoAction::Create),
-                            Message::key(MessageKey::OutcomeItemFailed)
-                                .text(file_name(p))
-                                .text(e.to_string())
-                                .to_string(),
-                        );
-                    }
+                if std::fs::symlink_metadata(p).is_ok()
+                    && let Err(e) = trash::trash(p)
+                {
+                    return Partial::stopped(
+                        some_if(paths[..i].to_vec(), UndoAction::Create),
+                        some_if(paths[i..].to_vec(), UndoAction::Create),
+                        Message::key(MessageKey::OutcomeItemFailed)
+                            .text(file_name(p))
+                            .text(e.to_string())
+                            .to_string(),
+                    );
                 }
             }
             Partial::done(action.clone())
         }
         UndoAction::Copy(pairs) => {
             for (i, (_, t)) in pairs.iter().enumerate() {
-                if std::fs::symlink_metadata(t).is_ok() {
-                    if let Err(e) = trash::trash(t) {
-                        return Partial::stopped(
-                            some_if(pairs[..i].to_vec(), UndoAction::Copy),
-                            some_if(pairs[i..].to_vec(), UndoAction::Copy),
-                            Message::key(MessageKey::OutcomeItemFailed)
-                                .text(file_name(t))
-                                .text(e.to_string())
-                                .to_string(),
-                        );
-                    }
+                if std::fs::symlink_metadata(t).is_ok()
+                    && let Err(e) = trash::trash(t)
+                {
+                    return Partial::stopped(
+                        some_if(pairs[..i].to_vec(), UndoAction::Copy),
+                        some_if(pairs[i..].to_vec(), UndoAction::Copy),
+                        Message::key(MessageKey::OutcomeItemFailed)
+                            .text(file_name(t))
+                            .text(e.to_string())
+                            .to_string(),
+                    );
                 }
             }
             Partial::done(action.clone())
@@ -3618,7 +3608,7 @@ fn invert(action: &UndoAction, op: &Op) -> Partial {
                                 .text(file_name(&it.original))
                                 .text(e.to_string())
                                 .to_string(),
-                        )
+                        );
                     }
                 }
             }
@@ -3643,10 +3633,9 @@ fn replay(action: &UndoAction, op: &Op) -> Partial {
                     .iter()
                     .filter(|r| &r.original == p)
                     .max_by(|a, b| a.deleted.cmp(&b.deleted))
+                    && let Ok(to) = trash::restore(rec)
                 {
-                    if let Ok(to) = trash::restore(rec) {
-                        back.push(to);
-                    }
+                    back.push(to);
                 }
             }
             if back.is_empty() {
@@ -3708,7 +3697,7 @@ fn replay(action: &UndoAction, op: &Op) -> Partial {
                                 .text(file_name(&it.original))
                                 .text(e.to_string())
                                 .to_string(),
-                        )
+                        );
                     }
                 }
             }
@@ -3750,13 +3739,12 @@ impl cxx_qt::Initialize for qobject::LoafCore {
                 core.reload_wallpaper_colors();
             });
         });
-        if let Some(w) = cw.as_ref() {
-            if let Some(dir) = theme::read_wallpaper_colors_source()
+        if let Some(w) = cw.as_ref()
+            && let Some(dir) = theme::read_wallpaper_colors_source()
                 .and_then(|(p, _, _)| Path::new(&p).parent().map(|x| x.to_path_buf()))
                 .or_else(|| wallpaper_dirs().into_iter().next())
-            {
-                w.watch(&dir);
-            }
+        {
+            w.watch(&dir);
         }
         self.as_mut().rust_mut().color_watcher = cw;
 
@@ -3895,11 +3883,11 @@ mod tests {
         let failed = Message::key(MessageKey::OutcomeRestoreFailedRenamed)
             .count(3)
             .count(1)
-            .nested(Message::list(vec![Message::key(
-                MessageKey::OutcomeItemFailed,
-            )
-            .text("a.txt")
-            .text("denied")]))
+            .nested(Message::list(vec![
+                Message::key(MessageKey::OutcomeItemFailed)
+                    .text("a.txt")
+                    .text("denied"),
+            ]))
             .to_string();
         let parsed: serde_json::Value = serde_json::from_str(&failed).unwrap();
         assert_eq!(parsed["key"], "outcome.restore-failed-renamed");
@@ -3973,10 +3961,12 @@ mod tests {
         assert_eq!(sub, vec![out.join("demo (3)")]);
         assert!(out.join("demo (3)/sub/a.txt").exists());
         // No staging folders are left behind.
-        assert!(!std::fs::read_dir(&out)
-            .unwrap()
-            .flatten()
-            .any(|e| e.file_name().to_string_lossy().starts_with(".loaf-extract")));
+        assert!(
+            !std::fs::read_dir(&out)
+                .unwrap()
+                .flatten()
+                .any(|e| e.file_name().to_string_lossy().starts_with(".loaf-extract"))
+        );
         std::fs::remove_dir_all(&d).unwrap();
     }
 

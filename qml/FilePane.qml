@@ -1653,8 +1653,8 @@ Item {
                                 for (var r = min_i; r <= max_i; ++r) {
                                     var itemTop = r * pitch + headerOffset;
                                     if (x < listView.width && x + w >= 0 && y + h > itemTop && y < itemTop + rowH) {
-                                        var p = paneEngine.path_at(r);
-                                        if (p && p.length > 0)
+                                        var p = String(paneEngine.path_at(r));
+                                        if (p.length > 0)
                                             sel[p] = true;
                                     }
                                 }
@@ -1666,8 +1666,8 @@ Item {
                             for (var r = r1; r <= r2; ++r) {
                                 var t = listView.originY + r * pitch;
                                 if (x < listView.width && x + w >= 0 && y + h > t && y < t + rowH) {
-                                    var p = paneEngine.path_at(r);
-                                    if (p && p.length > 0)
+                                    var p = String(paneEngine.path_at(r));
+                                    if (p.length > 0)
                                         sel[p] = true;
                                 }
                             }
@@ -1956,7 +1956,8 @@ Item {
                         onPressed: function(mouse) {
                             // Keep file dragging on the icon/name. Empty space
                             // in a row belongs to the background selection box.
-                            var nameWidth = listNameLoader.item ? Math.min(listNameLoader.width, listNameLoader.item.implicitWidth) : listNameLoader.width;
+                            var nameItem = listNameLoader.item as Item;
+                            var nameWidth = nameItem ? Math.min(listNameLoader.width, nameItem.implicitWidth) : listNameLoader.width;
                             var nameEnd = listNameLoader.mapToItem(rowMouse, nameWidth, 0).x;
                             if (mouse.button === Qt.LeftButton && theme.dragAction === "select"
                                     && pane.renamingPath !== row.path && mouse.x > nameEnd + 8) {

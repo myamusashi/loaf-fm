@@ -3018,9 +3018,9 @@ ApplicationWindow {
             var val = (text || "").trim();
             if (val.length === 0)
                 return;
-            var created = mode === "new_folder"
+            var created = String(mode === "new_folder"
                 ? core.create_folder(engine.current_path, val)
-                : core.create_file(engine.current_path, val);
+                : core.create_file(engine.current_path, val));
             if (created.length > 0)
                 window.activePane.pendingSelect = [created];
         }
@@ -3264,7 +3264,7 @@ ApplicationWindow {
                     var portNum = parseInt(networkPortField.text.trim(), 10);
                     if (isNaN(portNum) || portNum <= 0 || portNum > 65535) portNum = 0;
                     var proto = networkDialog.editingProtocol;
-                    var id = core.save_network_profile(
+                    var id = String(core.save_network_profile(
                         networkDialog.editingId,
                         proto,
                         networkNameField.text,
@@ -3274,7 +3274,7 @@ ApplicationWindow {
                         networkDomainField.text,
                         portNum,
                         networkSslSwitch.checked
-                    );
+                    ));
                     if (id.length === 0) {
                         window.toast("error", qsTr("Server address is required"));
                         return;
@@ -3557,7 +3557,7 @@ ApplicationWindow {
         function refreshActions() {
             var savedOrder = [];
             try {
-                var raw = core.get_setting("contextMenuOrder");
+                var raw = String(core.get_setting("contextMenuOrder") || "");
                 if (raw && raw.length > 0) savedOrder = JSON.parse(raw);
             } catch (e) {}
 
@@ -3606,7 +3606,7 @@ ApplicationWindow {
                 radius: theme.radiusM
                 color: actionDragHandle.containsMouse ? theme.hoverOverlay : "transparent"
 
-                readonly property bool isHidden: !!(theme.disabledMenuItems && theme.disabledMenuItems[modelData.id])
+                readonly property bool isHidden: !!(theme.disabledMenuItems && theme.disabledMenuItems[actionRow.modelData.id])
 
                 RowLayout {
                     anchors.fill: parent

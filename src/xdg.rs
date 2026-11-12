@@ -117,7 +117,7 @@ pub fn default_places() -> Vec<Place> {
         v.push(Place {
             id: key.into(),
             name: Message::raw(
-                &p.file_name()
+                p.file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_else(|| key.into()),
             )
@@ -149,7 +149,7 @@ pub fn default_places() -> Vec<Place> {
             v.push(Place {
                 id: "PROJECTS".into(),
                 name: Message::raw(
-                    &p.file_name()
+                    p.file_name()
                         .map(|n| n.to_string_lossy().to_string())
                         .unwrap_or_else(|| "Projects".into()),
                 )
@@ -172,7 +172,7 @@ pub fn default_places() -> Vec<Place> {
             v.push(Place {
                 id: "GAMES".into(),
                 name: Message::raw(
-                    &p.file_name()
+                    p.file_name()
                         .map(|n| n.to_string_lossy().to_string())
                         .unwrap_or_else(|| "Games".into()),
                 )
@@ -411,7 +411,11 @@ pub fn add_recent_in(content: &str, path: &Path, mime: &str, now: &str) -> Strin
         "  <bookmark href=\"{href}\" added=\"{now}\" modified=\"{now}\" visited=\"{now}\">\n    <info>\n      <metadata owner=\"http://freedesktop.org\">\n        <mime:mime-type type=\"{mime}\"/>\n        <bookmark:applications>\n          <bookmark:application name=\"Loaf\" exec=\"&apos;loaf %u&apos;\" modified=\"{now}\" count=\"1\"/>\n        </bookmark:applications>\n      </metadata>\n    </info>\n  </bookmark>\n",
         href = href,
         now = now,
-        mime = xml_escape(if mime.is_empty() { "application/octet-stream" } else { mime })
+        mime = xml_escape(if mime.is_empty() {
+            "application/octet-stream"
+        } else {
+            mime
+        })
     );
     if let Some(close) = content.rfind("</xbel>") {
         format!("{}{}{}", &content[..close], entry, &content[close..])

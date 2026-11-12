@@ -51,7 +51,7 @@ Item {
         spacing: 10
 
         Item {
-            width: 26; height: 26
+            Layout.preferredWidth: 26; Layout.preferredHeight: 26
             Canvas {
                 id: ring
                 anchors.fill: parent
@@ -85,7 +85,7 @@ Item {
             elide: Text.ElideRight
             Layout.maximumWidth: 240
         }
-        Item { width: 4; height: 1 }
+        Item { Layout.preferredWidth: 4; Layout.preferredHeight: 1 }
     }
 
     MouseArea {
@@ -113,13 +113,14 @@ Item {
         Repeater {
             model: panel.ops
             delegate: ColumnLayout {
+                id: opItem
                 required property var modelData
                 Layout.fillWidth: true
                 spacing: 4
                 RowLayout {
                     Layout.fillWidth: true
                     Text {
-                        text: theme.resolveRustMessage(modelData.title)
+                        text: theme.resolveRustMessage(opItem.modelData.title)
                         color: theme.textMain
                         font.pixelSize: theme.fs(12)
                         elide: Text.ElideMiddle
@@ -129,18 +130,18 @@ Item {
                         icon: "x"
                         variant: "text"
                         Accessible.name: qsTr("Cancel")
-                        onClicked: core.cancel_operation(modelData.id)
+                        onClicked: core.cancel_operation(opItem.modelData.id)
                     }
                 }
                 ProgressBar {
                     Layout.fillWidth: true
                     from: 0
                     to: 1
-                    value: modelData.progress < 0 ? 0 : modelData.progress
-                    indeterminate: modelData.progress < 0
+                    value: opItem.modelData.progress < 0 ? 0 : opItem.modelData.progress
+                    indeterminate: opItem.modelData.progress < 0
                 }
                 Text {
-                    text: [theme.resolveRustMessage(modelData.detail), theme.resolveRustMessage(modelData.current)].filter(function(s) { return s && s.length > 0; }).join("  ·  ")
+                    text: [theme.resolveRustMessage(opItem.modelData.detail), theme.resolveRustMessage(opItem.modelData.current)].filter(function(s) { return s && s.length > 0; }).join("  ·  ")
                     color: theme.textMuted
                     font.pixelSize: theme.fs(10)
                     elide: Text.ElideMiddle

@@ -7,6 +7,9 @@
 #include <QStringList>
 #include <QVariantMap>
 #include <QWindow>
+#include <QtGlobal>
+
+static_assert(QT_VERSION >= QT_VERSION_CHECK(6, 12, 0), "Loaf requires Qt 6.12 or newer");
 
 #include "rust/cxx.h"
 
