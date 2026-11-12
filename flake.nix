@@ -99,6 +99,7 @@
               pkg-config
               cmake
               ninja
+              mold
               rustc
               cargo
               rustfmt
