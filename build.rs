@@ -140,10 +140,10 @@ fn main() {
         "qml/Toast.qml",
         "qml/components/FileGridCard.qml",
         "qml/components/RemoteCard.qml",
-        "qml/components/InlineRename.qml",
         "qml/components/LoafCheckBox.qml",
         "qml/components/LoafRadio.qml",
         "qml/components/LoafTooltip.qml",
+        "qml/components/InlineRename.qml",
         "qml/components/LoafTextField.qml",
         "qml/components/LoafPopup.qml",
         "qml/components/LoafMenuItem.qml",
@@ -202,6 +202,9 @@ fn main() {
         "cpp/m3shapes/morph.cpp",
         "cpp/m3shapes/shapes.cpp",
         "cpp/m3shapes/material_shape.cpp",
+        "cpp/native.cpp",
+        "cpp/portal.cpp",
+        "cpp/thumbnails.cpp",
     ]);
     let builder = match compile_translations() {
         Some(qrc) => builder.qrc(qrc),
