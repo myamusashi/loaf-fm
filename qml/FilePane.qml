@@ -776,7 +776,7 @@ Item {
                         var rowH = pane.listRowH;
                         var pitch = rowH + listView.spacing;
                         var itemTop = idx * pitch;
-                        if (paneEngine.sort_by === "modified") {
+                        if (paneEngine.group_by !== "none") {
                             var groups = [];
                             try { groups = JSON.parse(paneEngine.groups_json()); } catch (e) { groups = []; }
                             for (var g = 0; g < groups.length; ++g) {
@@ -846,7 +846,7 @@ Item {
                         return out;
                     if (pane.isList()) {
                         var rowH = pane.listRowH + 3;
-                        if (paneEngine.sort_by === "modified") {
+                        if (paneEngine.group_by !== "none") {
                             var groups = [];
                             try { groups = JSON.parse(paneEngine.groups_json()); } catch (e) { groups = []; }
                             for (var g = 0; g < groups.length; ++g) {
@@ -1636,7 +1636,7 @@ Item {
                         var sel = Object.assign({}, base);
                         var rowH = pane.listRowH;
                         var pitch = rowH + listView.spacing;
-                        if (paneEngine.sort_by === "modified") {
+                        if (paneEngine.group_by !== "none") {
                             var groups = [];
                             try { groups = JSON.parse(paneEngine.groups_json()); } catch (e) { groups = []; }
                             for (var g = 0; g < groups.length; ++g) {
